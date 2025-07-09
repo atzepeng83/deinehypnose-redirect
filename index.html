@@ -1,32 +1,78 @@
-const params = new URLSearchParams(window.location.search);
-const session_id = params.get("session_id");
-if (!session_id) window.location.href = "https://deinehypnose.net";
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Weiterleitung …</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #181f23;
+      color: #f2f2f2;
+      text-align: center;
+      padding-top: 80px;
+    }
+    .lds-ring {
+      display: inline-block;
+      position: relative;
+      width: 50px;
+      height: 50px;
+      margin-bottom: 32px;
+    }
+    .lds-ring div {
+      box-sizing: border-box;
+      display: block;
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      margin: 5px;
+      border: 5px solid #22e26b;
+      border-radius: 50%;
+      animation: lds-ring 1.2s linear infinite;
+      border-color: #22e26b transparent transparent transparent;
+    }
+    .lds-ring div:nth-child(1) { animation-delay: -0.45s; }
+    .lds-ring div:nth-child(2) { animation-delay: -0.3s; }
+    .lds-ring div:nth-child(3) { animation-delay: -0.15s; }
+    @keyframes lds-ring {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+  </style>
+</head>
+<body>
+  <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+  <h1>Lade deinen Checkout …</h1>
+  <p>Du wirst gleich weitergeleitet.</p>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const session_id = params.get("session_id");
 
-// Polling-Loop: versuche mehrfach, stripe_url_kaufen abzuholen
-let tries = 0;
-const maxTries = 10;
-
-function pollForStripeUrl() {
-  fetch(`https://atzepeng.app.n8n.cloud/webhook/7ad19710-201a-453c-b503-4a20ec8647da?session_id=${session_id}`)
-    .then(r => r.json())
-    .then(d => {
-      if (d.stripe_url_kaufen) {
-        window.location.href = d.stripe_url_kaufen;
-      } else if (tries < maxTries) {
-        tries++;
-        setTimeout(pollForStripeUrl, 500); // 500ms warten und nochmal versuchen
-      } else {
-        document.body.innerHTML = "<h1>Fehler beim Checkout-Redirect.</h1><p>Support: info@deinehypnose.net</p>";
-      }
-    })
-    .catch(() => {
-      if (tries < maxTries) {
-        tries++;
-        setTimeout(pollForStripeUrl, 500);
-      } else {
-        document.body.innerHTML = "<h1>Fehler beim Checkout-Redirect.</h1><p>Support: info@deinehypnose.net</p>";
-      }
-    });
-}
-
-pollForStripeUrl();
+    if (!session_id) {
+      window.location.href = "https://deinehypnose.net";
+    } else {
+      fetch(`https://atzepeng.app.n8n.cloud/webhook/7ad19710-201a-453c-b503-4a20ec8647da?session_id=${session_id}`)
+        .then(async r => {
+          // Falls kein JSON zurückkommt, Fehler abfangen:
+          let d;
+          try {
+            d = await r.json();
+          } catch (e) {
+            throw new Error("Invalid JSON response");
+          }
+          // Prüfen, ob Stripe-URL zurückkommt:
+          if (d && d.stripe_url_kaufen && d.stripe_url_kaufen.startsWith("http")) {
+            window.location.href = d.stripe_url_kaufen;
+          } else {
+            document.body.innerHTML = `<h1>Fehler beim Checkout-Redirect.</h1>
+              <p>Support: info@deinehypnose.net<br>Session: ${session_id}</p>`;
+          }
+        })
+        .catch((err) => {
+          document.body.innerHTML = `<h1>Fehler beim Redirect.</h1>
+            <p>Kontakt: info@deinehypnose.net<br><small>${err.message}</small></p>`;
+        });
+    }
+  </script>
+</body>
+</html>
