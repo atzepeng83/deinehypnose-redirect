@@ -48,31 +48,40 @@
     const params = new URLSearchParams(window.location.search);
     const session_id = params.get("session_id");
 
-    if (!session_id) {
-      window.location.href = "https://deinehypnose.net";
-    } else {
+    function fetchStripeUrl(retry = 0) {
       fetch(`https://atzepeng.app.n8n.cloud/webhook/7ad19710-201a-453c-b503-4a20ec8647da?session_id=${session_id}`)
         .then(async r => {
-          // Falls kein JSON zurückkommt, Fehler abfangen:
           let d;
           try {
             d = await r.json();
           } catch (e) {
             throw new Error("Invalid JSON response");
           }
-          // Prüfen, ob Stripe-URL zurückkommt:
           if (d && d.stripe_url_kaufen && d.stripe_url_kaufen.startsWith("http")) {
             window.location.href = d.stripe_url_kaufen;
+          } else if (retry < 10) {
+            setTimeout(() => fetchStripeUrl(retry + 1), 1200); // nochmal probieren nach 1.2s
           } else {
             document.body.innerHTML = `<h1>Fehler beim Checkout-Redirect.</h1>
               <p>Support: info@deinehypnose.net<br>Session: ${session_id}</p>`;
           }
         })
         .catch((err) => {
-          document.body.innerHTML = `<h1>Fehler beim Redirect.</h1>
-            <p>Kontakt: info@deinehypnose.net<br><small>${err.message}</small></p>`;
+          if (retry < 10) {
+            setTimeout(() => fetchStripeUrl(retry + 1), 1200);
+          } else {
+            document.body.innerHTML = `<h1>Fehler beim Redirect.</h1>
+              <p>Kontakt: info@deinehypnose.net<br><small>${err.message}</small></p>`;
+          }
         });
+    }
+
+    if (!session_id) {
+      window.location.href = "https://deinehypnose.net";
+    } else {
+      fetchStripeUrl();
     }
   </script>
 </body>
 </html>
+
