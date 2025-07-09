@@ -42,8 +42,8 @@
 </head>
 <body>
   <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
-  <h1>Lade deinen Checkout …</h1>
-  <p>Du wirst gleich weitergeleitet.</p>
+  <h1>Nur noch ein Schritt!</h1>
+  <p>100% sicher & vertraulich.</p>
   <script>
     const params = new URLSearchParams(window.location.search);
     const session_id = params.get("session_id");
@@ -60,7 +60,7 @@
           if (d && d.stripe_url_kaufen && d.stripe_url_kaufen.startsWith("http")) {
             window.location.href = d.stripe_url_kaufen;
           } else if (retry < 10) {
-            setTimeout(() => fetchStripeUrl(retry + 1), 1200); // nochmal probieren nach 1.2s
+            setTimeout(() => fetchStripeUrl(retry + 1), 800); // nochmal probieren nach 0.8s
           } else {
             document.body.innerHTML = `<h1>Fehler beim Checkout-Redirect.</h1>
               <p>Support: info@deinehypnose.net<br>Session: ${session_id}</p>`;
@@ -68,7 +68,7 @@
         })
         .catch((err) => {
           if (retry < 10) {
-            setTimeout(() => fetchStripeUrl(retry + 1), 1200);
+            setTimeout(() => fetchStripeUrl(retry + 1), 800);
           } else {
             document.body.innerHTML = `<h1>Fehler beim Redirect.</h1>
               <p>Kontakt: info@deinehypnose.net<br><small>${err.message}</small></p>`;
