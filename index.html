@@ -49,7 +49,7 @@
     const session_id = params.get("session_id");
 
     function fetchStripeUrl(retry = 0) {
-      fetch(`https://n8n-deinehypnose2-u51159.vm.elestio.app/webhook/7ad19710-201a-453c-b503-4a20ec8647da?session_id=${session_id}`)
+      fetch(`https://n8n-deinehypnose2-u51159.vm.elestio.app/webhook-test/7ad19710-201a-453c-b503-4a20ec8647da?session_id=${session_id}`)
         .then(async r => {
           let d;
           try {
